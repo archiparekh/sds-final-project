@@ -24,16 +24,7 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(
-            leaflet() %>%
-                addProviderTiles("CartoDB.Positron") %>%
-                setView(-98.483330, 38.712046, zoom = 4) %>%
-                addPolygons(data = states_merged_insecurity ,
-                            fillColor = ~pal(states_merged_insecurity$rate),
-                            fillOpacity = 0.7,
-                            weight = 0.2,
-                            smoothFactor = 0.2,
-                            popup = ~popup_sb)  %>% 
-                addLegend(pal = pal, values = states_merged_insecurity$rate, opacity = 1),
+            leafletOutput('map'),
             textOutput('corr'),
             dataTableOutput('table')
             # leaflet() %>%
@@ -110,7 +101,16 @@ server <- function(input, output) {
     output$table <- renderDataTable(corr_table %>% mutate(per_100k=round(per_100k, 2)))
     
     corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$per_100k), 2)
-
+    output$map <- renderLeaflet(leaflet() %>%
+        addProviderTiles("CartoDB.Positron") %>%
+        setView(-98.483330, 38.712046, zoom = 4) %>%
+        addPolygons(data = states_merged_insecurity ,
+                    fillColor = ~pal(states_merged_insecurity$rate),
+                    fillOpacity = 0.7,
+                    weight = 0.2,
+                    smoothFactor = 0.2,
+                    popup = ~popup_sb)  %>% 
+        addLegend(pal = pal, values = states_merged_insecurity$rate, opacity = 1))
     
     output$corr <- renderText(paste0("Correlation between number of fast food restaurant per 100k and Food Insecurity: ", toString(corr_num), sep=" "))
 }
