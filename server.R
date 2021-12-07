@@ -15,15 +15,16 @@ server <- function(input, output) {
 
   what.to.map <- reactive(input$map_var)
   
-  
+  # Food Insecurity Data
   state_data <- read_excel("./Map_the_Meal_Gap_Data/Map the Meal Gap Data/MMG2021_2019Data_ToShare.xlsx", sheet="2019 State")
   insecurity_rate <- state_data %>% select("State Name", "State", "2019 Food Insecurity Rate")
   colnames(insecurity_rate) <- c("state_name", "state", "rate")
   
-  
+  # Income Data
   income_data <- read_csv("./income_by_state.csv")
   states_merged_income <- geo_join(states, income_data, "NAME", "state")
   
+  # Use the dropdown to decide which to visualize on the map
   output$map <- renderLeaflet({
     if(what.to.map() == "food"){
       states_merged_insecurity <- geo_join(states, insecurity_rate, "STUSPS", "state")
@@ -40,11 +41,8 @@ server <- function(input, output) {
                     smoothFactor = 0.2,
                     popup = ~popup_sb)  %>% 
         addLegend(pal = pal, values = states_merged_insecurity$rate, opacity = 1))
-      
-      
-      
     } else {
-      pal <- colorNumeric("Greens", domain=states_merged_income$income)
+      pal <- colorNumeric("Blues", domain=states_merged_income$income)
       popup_sb <- paste0("Income: ", as.character(states_merged_income$income))
       
       
@@ -58,24 +56,25 @@ server <- function(input, output) {
                     smoothFactor = 0.2,
                     popup = ~popup_sb)  %>% 
         addLegend(pal = pal, values = states_merged_income$income, opacity = 1))
-      
     }
   })
 
   
   
-  population.by.state <- as.data.frame(list(pop=(state_data["# of Food Insecure Persons in 2019"] / state_data["2019 Food Insecurity Rate"]), state.abb=state_data$`State`))
-  colnames(population.by.state) <- c("pop", "province")
+  # population.by.state <- as.data.frame(list(pop=(state_data["# of Food Insecure Persons in 2019"] / state_data["2019 Food Insecurity Rate"]), state.abb=state_data$`State`))
+  # colnames(population.by.state) <- c("pop", "province")
+  # 
+  # # Plot fast food data
+  # fast_food_res <- read_csv("FastFoodRestaurants.csv")
+  # top_res <- fast_food_res %>% group_by(name) %>% count() %>% arrange(desc(n)) %>% select("name") %>% head(8)
+  # fast_food_res_top <- fast_food_res %>% subset(name %in% unlist(top_res))
+  # 
+  # # num restaurants per capita
+  # fast_food_per_state <- fast_food_res %>% group_by(province) %>% count()
+  # ff_per_100k <- inner_join(fast_food_per_state, population.by.state, by="province") %>% mutate(per_100k = n / pop * 100000) %>% arrange(desc(per_100k))
+  # 
   
-  # Plot fast food data
-  fast_food_res <- read_csv("FastFoodRestaurants.csv")
-  top_res <- fast_food_res %>% group_by(name) %>% count() %>% arrange(desc(n)) %>% select("name") %>% head(8)
-  fast_food_res_top <- fast_food_res %>% subset(name %in% unlist(top_res))
-  
-  # num restaurants per capita
-  fast_food_per_state <- fast_food_res %>% group_by(province) %>% count()
-  ff_per_100k <- inner_join(fast_food_per_state, population.by.state, by="province") %>% mutate(per_100k = n / pop * 100000) %>% arrange(desc(per_100k))
-  
+  ff_per_100k <- read.csv("fast_food_per_100k.csv")
   
   #correlation between num of restaurants per 100000 and food insecurity rate
   corr_table <- inner_join(state_data, ff_per_100k %>% rename(State=province), by='State') %>%
