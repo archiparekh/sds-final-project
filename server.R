@@ -13,6 +13,12 @@ server <- function(input, output) {
   what.to.map <- reactive(input$map_var)
   corr.graph <- reactive(input$corr_graph)
   
+  # Dropdown Options
+  map.options <- c("Food Insecurity Rate", "Median Income")
+  corr.options <- c("Restaurants (Per 100k) x Median Income",
+                    "Median Income x Food Insecurity Rate",
+                    "Restaurants (Per 100k) x Food Insecurity Rate")
+  
   # Data sources
   food_insecurity_data <- read_excel("./Map_the_Meal_Gap_Data/Map the Meal Gap Data/MMG2021_2019Data_ToShare.xlsx", sheet="2019 State")
   income_data <- read_csv("./income_by_state.csv")
@@ -29,7 +35,7 @@ server <- function(input, output) {
   
   # Visualize on map
   output$map <- renderLeaflet({
-    if(what.to.map() == "food"){
+    if(what.to.map() == map.options[1]){
       states_merged_insecurity <- geo_join(states, insecurity_rate, "STUSPS", "state")
       pal <- colorNumeric("Greens", domain=states_merged_insecurity$rate)
       popup_sb <- paste0("Rate: ", as.character(states_merged_insecurity$rate))
@@ -64,12 +70,10 @@ server <- function(input, output) {
 
   # Correlation plot
   output$correlation_plot <- renderPlot({
-    choices = c("per_100k x income", "income x food insecurity", "per_100k x food insecurity")
-
-    if(corr.graph() == choices[1]){
+    if(corr.graph() == corr.options[1]){
       return(ggplot(data=corr_table, aes(x = per_100k, y = income)) + geom_point() +
                labs(x="per_100k", y="income") + theme_bw())
-    } else if(corr.graph() == choices[2]){
+    } else if(corr.graph() == corr.options[2]){
       return(ggplot(data=corr_table, aes(x = income, y = `2019 Food Insecurity Rate`)) + geom_point() +
                labs(x = "income", y = "2019 Food Insecurity Rate") + theme_bw())
     } else{
@@ -80,12 +84,11 @@ server <- function(input, output) {
   
   # Correlation coefficient
   output$corr <- renderText({
-    choices = c("per_100k x income", "income x food insecurity", "per_100k x food insecurity")
     corr_num <- 0
     
-    if(corr.graph() == choices[1]){
+    if(corr.graph() == corr.options[1]){
       corr_num <- round(cor(corr_table$`per_100k`, corr_table$income), 2)
-    } else if(corr.graph() == choices[2]){
+    } else if(corr.graph() == corr.options[2]){
       corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$income), 2)
     } else{
       corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$per_100k), 2)
