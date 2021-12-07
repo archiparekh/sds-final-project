@@ -16,11 +16,17 @@ ui <- fluidPage(
                   label = "Select X:", 
                   choices = c("income", "food")),
       
+      selectInput(inputId = "corr_graph", 
+                  label = "Select correlation vars:", 
+                  choices = c("per_100k x income", "income x food insecurity", "per_100k x food insecurity")),
+      
     ),
     
     mainPanel(
       
       leafletOutput('map'),
+      plotOutput("correlation_plot"),
+    
       textOutput('corr'),
       dataTableOutput('table')
       

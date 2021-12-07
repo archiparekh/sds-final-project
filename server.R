@@ -11,6 +11,7 @@ server <- function(input, output) {
   states <- states(cb=T)
 
   select_options = c("income", "fast food")
+  corr_options = c("per_100k, income, food insecurity")
 
   what.to.map <- reactive(input$map_var)
   
@@ -77,22 +78,44 @@ server <- function(input, output) {
   
   
   #correlation between num of restaurants per 100000 and food insecurity rate
-  corr_table <- inner_join(state_data, ff_per_100k %>% rename(State=province), by='State') %>% select(State, per_100k, `2019 Food Insecurity Rate`)
+  corr_table <- inner_join(state_data, ff_per_100k %>% rename(State=province), by='State') %>%
+    inner_join(income_data %>% rename(`State Name`=state), by="State Name") %>%
+    select(State, per_100k, `2019 Food Insecurity Rate`, income)
+      
+  
   output$table <- renderDataTable(corr_table %>% mutate(per_100k=round(per_100k, 2)))
   
-  corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$per_100k), 2)
+
+  corr.graph <- reactive(input$corr_graph)
+
   
-  # output$map <- renderLeaflet(leaflet() %>%
-  #   addProviderTiles("CartoDB.Positron") %>%
-  #   setView(-98.483330, 38.712046, zoom = 4) %>%
-  #   addPolygons(data = states_merged_insecurity ,
-  #               fillColor = ~pal(states_merged_income$income),
-  #               fillOpacity = 0.7,
-  #               weight = 0.2,
-  #               smoothFactor = 0.2,
-  #               popup = ~popup_sb)  %>% 
-  #   addLegend(pal = pal, values = states_merged_income$income, opacity = 1))
+  output$correlation_plot <- renderPlot({
+    choices = c("per_100k x income", "income x food insecurity", "per_100k x food insecurity")
+
+    if(corr.graph() == choices[1]){
+      return(ggplot(data=corr_table, aes(x = per_100k, y = income)) + geom_point() +
+               labs(x="per_100k", y="income") + theme_bw())
+    } else if(corr.graph() == choices[2]){
+      return(ggplot(data=corr_table, aes(x = income, y = `2019 Food Insecurity Rate`)) + geom_point() +
+               labs(x = "income", y = "2019 Food Insecurity Rate") + theme_bw())
+    } else{
+      return(ggplot(data=corr_table, aes(x = per_100k, y = `2019 Food Insecurity Rate`)) + geom_point() +
+               labs(x = "per_100k", y = "2019 Food Insecurity Rate") + theme_bw())
+    }
+  })
   
   
-  output$corr <- renderText(paste0("Correlation between number of fast food restaurant per 100k and Food Insecurity: ", toString(corr_num), sep=" "))
-}
+  output$corr <- renderText({
+    choices = c("per_100k x income", "income x food insecurity", "per_100k x food insecurity")
+    corr_num <- 0
+    
+    if(corr.graph() == choices[1]){
+      corr_num <- round(cor(corr_table$`per_100k`, corr_table$income), 2)
+    } else if(corr.graph() == choices[2]){
+      corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$income), 2)
+    } else{
+      corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$per_100k), 2)
+    }
+    return(paste0("Correlation: ", toString(corr_num), sep=" "))
+  })
+  }
