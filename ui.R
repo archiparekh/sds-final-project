@@ -6,9 +6,10 @@ library(leaflet)
 
 ui <- fluidPage(
   
-  titlePanel(title = "Food Insecurity and Income and Fast Food"),
-  
+  titlePanel(title = "Food Insecurity, Income, and the Frequency of Fast Food Restaurants in 2019"),
+  p("Food insecurity is the lack of healthy, consistent food sources. It can be correlated with many life factors, such as income, race, and education. Here, we will explore the connections between food insecurity and income, and whether the frequency of fast food restaurants is correlated with food insecurity. "), 
     mainPanel(
+      hr(), 
       radioButtons("map_var", "Map by",
                    choiceNames = list(
                      "Food Insecurity Rate", "Median Income"
