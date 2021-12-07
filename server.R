@@ -25,6 +25,11 @@ server <- function(input, output) {
   ff_per_100k <- read.csv("fast_food_per_100k.csv")
   states <- states(cb=T)
 
+  # Datatable with all data points by state
+  corr_table <- inner_join(food_insecurity_data, ff_per_100k %>% rename(State=province), by='State') %>%
+    inner_join(income_data %>% rename(`State Name`=state), by="State Name") %>%
+    select(State, per_100k, `2019 Food Insecurity Rate`, income)
+  colnames(corr_table) <- c("State", "Restaurant Density", "Food Insecurity Rate", "Median Income")
   
   # Mapping food insecurity
   insecurity_rate <- food_insecurity_data %>% select("State Name", "State", "2019 Food Insecurity Rate")
@@ -71,14 +76,14 @@ server <- function(input, output) {
   # Correlation plot
   output$correlation_plot <- renderPlot({
     if(corr.graph() == corr.options[1]){
-      return(ggplot(data=corr_table, aes(x = per_100k, y = income)) + geom_point() +
-               labs(x="per_100k", y="income") + theme_bw())
+      return(ggplot(data=corr_table, aes(x = `Restaurant Density`, y = `Median Income`, color=State)) + geom_point() +
+               labs(x="Restaurant Density", y="Median Income") + theme_bw())
     } else if(corr.graph() == corr.options[2]){
-      return(ggplot(data=corr_table, aes(x = income, y = `2019 Food Insecurity Rate`)) + geom_point() +
-               labs(x = "income", y = "2019 Food Insecurity Rate") + theme_bw())
+      return(ggplot(data=corr_table, aes(x = `Median Income`, y = `Food Insecurity Rate`, color=State)) + geom_point() +
+               labs(x = "Median Income", y = "Food Insecurity Rate") + theme_bw())
     } else{
-      return(ggplot(data=corr_table, aes(x = per_100k, y = `2019 Food Insecurity Rate`)) + geom_point() +
-               labs(x = "per_100k", y = "2019 Food Insecurity Rate") + theme_bw())
+      return(ggplot(data=corr_table, aes(x = `Restaurant Density`, y = `Food Insecurity Rate`, color=State)) + geom_point() +
+               labs(x = "Restaurant Density", y = "Food Insecurity Rate") + theme_bw())
     }
   })
   
@@ -87,20 +92,17 @@ server <- function(input, output) {
     corr_num <- 0
     
     if(corr.graph() == corr.options[1]){
-      corr_num <- round(cor(corr_table$`per_100k`, corr_table$income), 2)
+      corr_num <- round(cor(corr_table$`Restaurant Density`, corr_table$`Median Income`), 2)
     } else if(corr.graph() == corr.options[2]){
-      corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$income), 2)
+      corr_num <- round(cor(corr_table$`Food Insecurity Rate`, corr_table$`Median Income`), 2)
     } else{
-      corr_num <- round(cor(corr_table$`2019 Food Insecurity Rate`, corr_table$per_100k), 2)
+      corr_num <- round(cor(corr_table$`Food Insecurity Rate`, corr_table$`Restaurant Density`), 2)
     }
     return(paste0("Correlation: ", toString(corr_num), sep=" "))
   })
   
-  # Datatable with all data points by state
-  corr_table <- inner_join(food_insecurity_data, ff_per_100k %>% rename(State=province), by='State') %>%
-    inner_join(income_data %>% rename(`State Name`=state), by="State Name") %>%
-    select(State, per_100k, `2019 Food Insecurity Rate`, income)
   
-  output$table <- renderDataTable(corr_table %>% mutate(per_100k=round(per_100k, 2)))
+  
+  output$table <- renderDataTable(corr_table %>% mutate(`Restaurant Density`=round(`Restaurant Density`, 2)))
   
 }
