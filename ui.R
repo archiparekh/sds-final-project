@@ -30,7 +30,9 @@ ui <- fluidPage(
       textOutput('corr'),
       hr(), 
       h3("Explore the Data"),
-      dataTableOutput('table')
+      dataTableOutput('table'), 
+      hr(),
+      p("built by Archi Parekh") 
     )
   )
 
