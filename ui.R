@@ -17,6 +17,7 @@ ui <- fluidPage(
                    choiceValues = list(
                      "Food Insecurity Rate", "Median Income"
                    )),
+      h3(textOutput("map_title")),
       leafletOutput('map'),
       hr(), 
       selectInput(inputId = "corr_graph", 
@@ -24,9 +25,11 @@ ui <- fluidPage(
                   choices = c("Restaurants (Per 100k) x Median Income",
                               "Median Income x Food Insecurity Rate",
                               "Restaurants (Per 100k) x Food Insecurity Rate")),
+      h3(textOutput("plot_title")),
       plotOutput("correlation_plot"),
       textOutput('corr'),
       hr(), 
+      h3("Explore the Data"),
       dataTableOutput('table')
     )
   )

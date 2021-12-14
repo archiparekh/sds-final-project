@@ -39,11 +39,12 @@ server <- function(input, output) {
   states_merged_income <- geo_join(states, income_data, "NAME", "state")
   
   # Visualize on map
+  output$map_title <- renderText({ paste(what.to.map(), " by State") })
   output$map <- renderLeaflet({
     if(what.to.map() == map.options[1]){
       states_merged_insecurity <- geo_join(states, insecurity_rate, "STUSPS", "state")
       pal <- colorNumeric("Greens", domain=states_merged_insecurity$rate)
-      popup_sb <- paste0("Rate: ", as.character(states_merged_insecurity$rate))
+      popup_sb <- paste(as.character(states_merged_insecurity$state), ": ", as.character(states_merged_insecurity$rate))
       
       return(leaflet() %>%
         addProviderTiles("CartoDB.Positron") %>%
@@ -57,7 +58,7 @@ server <- function(input, output) {
         addLegend(pal = pal, values = states_merged_insecurity$rate, opacity = 1))
     } else {
       pal <- colorNumeric("Blues", domain=states_merged_income$income)
-      popup_sb <- paste0("Income: ", as.character(states_merged_income$income))
+      popup_sb <- paste0(as.character(states_merged_income$NAME), ": ", as.character(states_merged_income$income))
       
       
       return(leaflet() %>%
@@ -74,16 +75,17 @@ server <- function(input, output) {
   })
 
   # Correlation plot
+  output$plot_title <- renderText({ paste(corr.graph())})
   output$correlation_plot <- renderPlot({
     if(corr.graph() == corr.options[1]){
-      return(ggplot(data=corr_table, aes(x = `Restaurant Density`, y = `Median Income`, color=State)) + geom_point() +
-               labs(x="Restaurant Density", y="Median Income") + theme_bw())
+      return(ggplot(data=corr_table, aes(x = `Restaurant Density`, y = `Median Income`)) + geom_point() +
+               geom_smooth(method = "lm", se = FALSE) +labs(x="Restaurant Density", y="Median Income") +  theme_bw())
     } else if(corr.graph() == corr.options[2]){
-      return(ggplot(data=corr_table, aes(x = `Median Income`, y = `Food Insecurity Rate`, color=State)) + geom_point() +
-               labs(x = "Median Income", y = "Food Insecurity Rate") + theme_bw())
+      return(ggplot(data=corr_table, aes(x = `Median Income`, y = `Food Insecurity Rate`)) + geom_point() +
+               geom_smooth(method = "lm", se = FALSE) + labs(x = "Median Income", y = "Food Insecurity Rate") + theme_bw())
     } else{
-      return(ggplot(data=corr_table, aes(x = `Restaurant Density`, y = `Food Insecurity Rate`, color=State)) + geom_point() +
-               labs(x = "Restaurant Density", y = "Food Insecurity Rate") + theme_bw())
+      return(ggplot(data=corr_table, aes(x = `Restaurant Density`, y = `Food Insecurity Rate`)) + geom_point() +
+               geom_smooth(method = "lm", se = FALSE) + labs(x = "Restaurant Density", y = "Food Insecurity Rate") + theme_bw())
     }
   })
   
