@@ -10,6 +10,9 @@ A list of fast food restaurants in the US from Datainfiniti's business database 
 
 Median income data by state for 2019 was available on the NCES website. The data there was sourced from the US Census. I used webscraping to extract this data. https://nces.ed.gov/programs/digest/d20/tables/dt20_102.30.asp
 
+### Findings of Interest
+Food insecurity and fast food restaurant density are not correlated (0.17). After reading a few articles online, I found that middle class people are the highest consumers of fast food. This seems to explain why the correlation coefficient is so low. Food insecurity and income is strongly correlated (0.68). This is expected, given that lower income reduces access to good food options.
+
 ### Description of Files
 To see the source code for the website, see **`app.R`**, **`server.R`**, **`ui.R`**. 
 **`get_fast_food_data.R`** contains the script for aggregating restaurant data. 
